@@ -1,0 +1,7 @@
+
+enum DFScenarioRunStatus {
+    SCHEDULED
+    IN_PROGRESS
+    FORECASTED
+    ERROR
+}

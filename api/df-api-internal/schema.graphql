@@ -1,0 +1,14 @@
+# Mutation 
+
+type Mutation {
+    dfUpdateForecast(
+        forecastId: ID!
+        latestVersionDimensionMemberId: ID!
+    ): Boolean
+
+    dfUpdateScenarioRun(
+        scenarioRunID: ID!
+        status: DFScenarioRunStatus!
+        daVersion: ID
+    ): Boolean
+}

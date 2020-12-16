@@ -1,0 +1,175 @@
+scalar Time
+scalar JSON
+
+# Query 
+
+extend type Query {
+    dfForecasts: [DFForecast!]
+
+    dfForecast(
+      id: ID!
+    ): DFForecast
+
+    dfForecastVersions(
+        limit: Int!
+    ): [DFForecastVersion!]
+
+    dfForecastVersion(
+      id: ID!
+    ): DFForecastVersion
+
+    dfDataFilters: [DFDataFilter!]
+}
+
+
+# Mutation 
+
+extend type Mutation {
+    # Scenarios
+    dfCreateScenario(
+        forecastId: ID!
+        scenarioName: String!
+        daBranchID: ID!
+        tagIDs: [Int!]
+        scope: [DFScenarioScopeEntryInput!]!
+        comment: String
+    ): DFScenarioRun
+
+    dfReRunScenario(
+        scenarioID: ID!
+    ): DFScenarioRun
+
+    dfPromoteScenario(
+        scenarioID: ID!
+    ): Boolean!
+
+    dfDeleteScenario(
+        scenarioID: ID!
+    ): Boolean!
+
+    dfTagScenario(
+        scenarioID: ID!
+        tagIds: [Int!]!
+    ): DFScenario
+
+    dfAddComentToScenario(
+        scenarioID: ID!
+        comment: String!
+    ): DFScenarioComment
+
+    # Data filters
+    dfCreateDataFilter(
+        name: String!
+        definition: JSON!
+    ): DFDataFilter
+
+    dfUpdateDataFilter(
+        id: ID!
+        name: String!
+        definition: JSON!
+    ): DFDataFilter
+
+    dfDeleteDataFilter(
+        id: ID!
+    ): Boolean!
+}
+
+
+# Input
+
+input DFScenarioScopeEntryInput {
+    daDimLevelColumnName: ID!
+    daDimMemberId: ID!
+}
+
+
+# Local Types
+
+type DFForecast @key(fields: "id") {
+    id: ID!
+    datasetID: ID!
+    name: String
+    latestVersionDimensionMemberId: ID
+
+    scenarios(
+        scope: [DFScenarioScopeEntryInput!]!
+    ): [DFScenario!]
+
+    scenario(
+        id: ID!
+    ): DFScenario!
+}
+
+type DFScenario @key(fields: "id") {
+    id: ID!
+    name: String!
+    daBranchID: ID!
+    scope: [DFScenarioScopeEntry!]!
+    status: DFScenarioStatus!
+    comments: [DFScenarioComment]
+    tags: [Tag] @provides(fields: "tagName")
+    user: User @provides(fields: "firstName")
+
+    isBlocked: Boolean!
+    latestRun: DFScenarioRun
+    allRuns: [DFScenarioRun!]
+}
+
+type DFScenarioScopeEntry {
+    daDimLevelColumnName: ID!
+    daDimMemberId: ID!
+}
+
+enum DFScenarioStatus {
+    CURRENT
+    DELETED
+    PROMOTED
+    SUPERSCEDED
+}
+
+type DFScenarioComment {
+    id: ID!
+    comment: String
+    user: User @provides(fields: "firstName")
+}
+
+type DFScenarioRun {
+    id: ID!
+    scenarioID: ID!
+    status: DFScenarioRunStatus!
+    daVersion: ID
+    elapsedTime: Float  # In seconds
+    user: User @provides(fields: "firstName")
+}
+
+enum DFScenarioRunStatus {
+    SCHEDULED
+    IN_PROGRESS
+    FORECASTED
+    ERROR
+}
+
+type DFDataFilter @key(fields: "id") {
+    id: ID!
+    name: String!
+    definition: JSON!
+}
+
+
+type DFForecastVersion {
+    id: ID!
+    datasetID: ID!
+    forecastName: String!
+}
+
+# External Types
+
+extend type User @key(fields: "userId") {
+    userId: String! @external
+    firstName: String @external
+}
+
+extend type Tag @key(fields: "tagId") {
+    tagId: Int! @external
+    tagName: String @external
+}
